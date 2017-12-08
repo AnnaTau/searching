@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -16,6 +15,8 @@ import java.util.*;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Condition.*;
+import static travel.From.*;
+import static travel.To.*;
 
 /**
  * Hello world!
@@ -27,6 +28,9 @@ public class App
     static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     static LocalDate startDate = LocalDate.parse("13.02.2018", formatter);
     static LocalDate finishDate = LocalDate.parse("25.03.2018", formatter);
+    static String days = "8..10";
+    static From from = PETERBURG;
+    static To to = SAMUI;
 
     public static void main( String[] args )
     {
@@ -43,10 +47,10 @@ public class App
 
     public static void SearchTours(){
         ArrayList<Tour> cheapestPrices = new ArrayList<>();
-        long days = ChronoUnit.DAYS.between(startDate, finishDate);
+        long period = ChronoUnit.DAYS.between(startDate, finishDate);
         LocalDate date = LocalDate.parse(startDate.format(formatter), formatter);
-        for (int i=0; i<days+1; i++){
-            String url = "https://level.travel/search/St.Petersburg-RU-to-Phuket-TH-departure-"+date.format(formatter)+"-for-10-nights-2-adults-0-kids-1..5-stars";
+        for (int i=0; i<period+1; i++){
+            String url = "https://level.travel/search/"+from+"-RU-to-"+to+"-departure-"+date.format(formatter)+"-for-"+days+"-nights-2-adults-0-kids-1..5-stars";
             log.info("Starting search for "+date.format(formatter));
             open(url);
             $(".loading-block").waitWhile(visible, 60000);

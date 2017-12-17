@@ -7,7 +7,10 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -25,28 +28,35 @@ import static travel.To.*;
 public class App
 {
     static Logger log = LoggerFactory.getLogger(App.class);
+
     static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     static LocalDate startDate = LocalDate.parse("13.02.2018", formatter);
-    static LocalDate finishDate = LocalDate.parse("25.03.2018", formatter);
-    static String days = "8..10";
+    static LocalDate finishDate = LocalDate.parse("30.03.2018", formatter);
+    static String days = "9..11";
     static From from = PETERBURG;
-    static To to = SAMUI;
+    static To to = EILAT;
 
     public static void main( String[] args )
     {
         Configuration.browser = "marionette";
-        Configuration.headless = true;
-        Configuration.timeout = 10000;
+        Configuration.headless = false;
+        Configuration.timeout = 15000;
         System.setProperty(FirefoxDriver.SystemProperty.DRIVER_USE_MARIONETTE,"true");
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Tau\\IdeaProjects\\searching\\src\\main\\resources\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Tau\\IdeaProjects\\searching\\src\\main\resources\\chromedriver.exe");
         System.setProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE,"/dev/null");
 
-        SearchTours();
+        try {
+            SearchTours();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 //        Test();
     }
 
-    public static void SearchTours(){
+    public static void SearchTours() throws IOException {
         ArrayList<Tour> cheapestPrices = new ArrayList<>();
+        String csvFile = "C:\\Users\\Tau\\Google Диск\\leveltravel\\"+to.name()+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy__hh_mm_ss"))+".csv";
+        FileWriter writer = new FileWriter(csvFile);
         long period = ChronoUnit.DAYS.between(startDate, finishDate);
         LocalDate date = LocalDate.parse(startDate.format(formatter), formatter);
         for (int i=0; i<period+1; i++){
@@ -54,6 +64,11 @@ public class App
             log.info("Starting search for "+date.format(formatter));
             open(url);
             $(".loading-block").waitWhile(visible, 60000);
+            if($(".no-results").is(visible)){
+                log.info("Нет туров на эту дату");
+                date = date.plusDays(1);
+                continue;
+            }
             SelenideElement resultsList = $("#search_results").should(not(empty));
             ElementsCollection hotels = resultsList.$$(".hotel_select");
             //форматируем список
@@ -73,7 +88,17 @@ public class App
         }
         Tour cheapest = cheapestPrices.stream().min(Comparator.comparing(Tour::getPrice)).get();
         cheapestPrices.stream().sorted(Comparator.comparing(Tour::getPrice)).forEach(i-> System.out.println(i.getPrice()+" at "+i.getDate().format(formatter)+" url -> "+i.getUrl()));
+        cheapestPrices.stream().sorted(Comparator.comparing(Tour::getPrice)).forEach(i-> {
+            try {
+                CSVUtils.writeLine(writer, Arrays.asList(i.getPrice().toString(), i.getDate().format(formatter), i.getUrl()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         log.info("Cheapest price of period "+cheapest.getPrice()+" with url -> "+cheapest.getUrl());
+        writer.flush();
+        writer.close();
+        log.info("File written "+csvFile);
     }
 
     public static void Test(){}

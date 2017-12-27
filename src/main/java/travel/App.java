@@ -7,6 +7,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -29,13 +30,13 @@ import static travel.To.*;
 public class App
 {
     static Logger log = LoggerFactory.getLogger(App.class);
-
+    static String csvFile = "";
     static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    static LocalDate startDate = LocalDate.parse("13.02.2018", formatter);
-    static LocalDate finishDate = LocalDate.parse("30.03.2018", formatter);
-    static String days = "9..11";
+    static LocalDate startDate = LocalDate.parse("14.02.2018", formatter);
+    static LocalDate finishDate = LocalDate.parse("10.03.2018", formatter);
+    static String days = "11";
     static From from = PETERBURG;
-    static To to = SAMUI;
+    static To to = PHUKET;
 
     public static void main( String[] args )
     {
@@ -50,6 +51,8 @@ public class App
             SearchTours();
         } catch (IOException e) {
             e.printStackTrace();
+            File file = new File(csvFile);
+            file.delete();
         }
 //        Test();
     }
@@ -57,7 +60,7 @@ public class App
     public static void SearchTours() throws IOException {
         ArrayList<Tour> cheapestPrices = new ArrayList<>();
 //        String csvFile = "C:\\Users\\Tau\\Google Диск\\leveltravel\\"+to.name()+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy__hh_mm_ss"))+".csv";
-        String csvFile = "/home/user/Documents/"+to.name()+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy__hh_mm_ss"))+".csv";
+        csvFile = "/home/user/Documents/"+from.name()+"-"+to.name()+" for "+days+" days "+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy hh-mm-ss"))+".csv";
         FileWriter writer = new FileWriter(csvFile);
         long period = ChronoUnit.DAYS.between(startDate, finishDate);
         LocalDate date = LocalDate.parse(startDate.format(formatter), formatter);
@@ -95,6 +98,7 @@ public class App
             }
             Tour min = dayList.stream().min(Comparator.comparing(Tour::getPrice)).get();
             log.info("Minimum price of the day "+min.getPrice());
+            log.debug(url);
             log.info("------------------------");
             cheapestPrices.add(min);
             date = date.plusDays(1);

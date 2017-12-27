@@ -1,7 +1,7 @@
 package travel;
 
 public enum To {
-    PHUKET("Phuket-TH"), SAMUI("Koh.Samui-TH"), EILAT("Eilat-IL");
+    PHUKET("Phuket-TH"), SAMUI("Koh.Samui-TH"), THAI("Any-TH"), EILAT("Eilat-IL"), PRAGUE("Prague-CZ");
 
     To(String name) {
         this.name = name;

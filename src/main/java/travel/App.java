@@ -6,6 +6,10 @@ import com.codeborne.selenide.SelenideElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.telegram.telegrambots.ApiContextInitializer;
+import org.telegram.telegrambots.TelegramBotsApi;
+import org.telegram.telegrambots.exceptions.TelegramApiException;
+import travel.telegram.Bot;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -32,34 +36,42 @@ public class App
     static Logger log = LoggerFactory.getLogger(App.class);
     static String csvFile = "";
     static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    static LocalDate startDate = LocalDate.parse("14.02.2018", formatter);
-    static LocalDate finishDate = LocalDate.parse("10.03.2018", formatter);
-    static String days = "11";
-    static From from = PETERBURG;
-    static To to = PHUKET;
+    static LocalDate startDate = LocalDate.parse("01.03.2018", formatter);
+    static LocalDate finishDate = LocalDate.parse("05.03.2018", formatter);
+    static String days = "5..9";
+    static From from = MOSCOW;
+    static To to = EILAT;
 
     public static void main( String[] args )
     {
+        ApiContextInitializer.init(); // Инициализируем апи
+        TelegramBotsApi botapi = new TelegramBotsApi();
+        try {
+            botapi.registerBot(new Bot());
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static File startSearch(String flyTo){
         Configuration.browser = "marionette";
         Configuration.headless = true;
         Configuration.timeout = 10000;
         System.setProperty(FirefoxDriver.SystemProperty.DRIVER_USE_MARIONETTE,"true");
         System.setProperty("webdriver.chrome.driver", "C:\\Users\\Tau\\IdeaProjects\\searching\\src\\main\resources\\chromedriver.exe");
         System.setProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE,"/dev/null");
-
         try {
-            SearchTours();
+            return SearchTours(flyTo);
         } catch (IOException e) {
             e.printStackTrace();
-            File file = new File(csvFile);
-            file.delete();
+            return null;
         }
-//        Test();
     }
 
-    public static void SearchTours() throws IOException {
+    public static File SearchTours(String flyTo) throws IOException {
+        to = To.valueOf(flyTo);
+        log.debug(to.toString());
         ArrayList<Tour> cheapestPrices = new ArrayList<>();
-//        String csvFile = "C:\\Users\\Tau\\Google Диск\\leveltravel\\"+to.name()+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy__hh_mm_ss"))+".csv";
         csvFile = "/home/user/Documents/"+from.name()+"-"+to.name()+" for "+days+" days "+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy hh-mm-ss"))+".csv";
         FileWriter writer = new FileWriter(csvFile);
         long period = ChronoUnit.DAYS.between(startDate, finishDate);
@@ -116,6 +128,7 @@ public class App
         writer.flush();
         writer.close();
         log.info("File written "+csvFile);
+        return new File(csvFile);
     }
 
     public static void Test(){}
